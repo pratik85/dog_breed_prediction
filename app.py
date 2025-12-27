@@ -23,6 +23,7 @@ from flask import Flask, render_template, request, jsonify, send_from_directory,
 from werkzeug.utils import secure_filename
 import logging
 from pathlib import Path
+import requests
 
 # ============================================================================
 # CONFIGURATION
@@ -72,11 +73,61 @@ CLASS_NAMES = [
 # MODEL LOADING
 # ============================================================================
 
+def download_model_from_google_drive():
+    """
+    Download the model from Google Drive if it doesn't exist locally.
+    Set the GOOGLE_DRIVE_MODEL_ID environment variable in Heroku.
+    """
+    if os.path.exists(MODEL_PATH):
+        logger.info(f"Model found at {MODEL_PATH}")
+        return True
+    
+    model_id = os.environ.get('GOOGLE_DRIVE_MODEL_ID')
+    if not model_id:
+        logger.warning("Model not found and GOOGLE_DRIVE_MODEL_ID not set. Model will fail to load.")
+        return False
+    
+    try:
+        logger.info(f"Downloading model from Google Drive (ID: {model_id})...")
+        Path(MODEL_PATH).parent.mkdir(parents=True, exist_ok=True)
+        
+        url = f"https://drive.google.com/uc?id={model_id}&export=download"
+        response = requests.get(url, stream=True, timeout=300)
+        
+        # Handle Google Drive warning page for large files
+        if 'text/html' in response.headers.get('content-type', ''):
+            cookies = response.cookies
+            params = {'id': model_id, 'confirm': 't'}
+            response = requests.get(url, params=params, stream=True, cookies=cookies, timeout=300)
+        
+        response.raise_for_status()
+        
+        total_size = int(response.headers.get('content-length', 0))
+        downloaded = 0
+        chunk_size = 8192
+        
+        with open(MODEL_PATH, 'wb') as f:
+            for chunk in response.iter_content(chunk_size=chunk_size):
+                if chunk:
+                    f.write(chunk)
+                    downloaded += len(chunk)
+        
+        logger.info(f"✓ Model downloaded successfully ({downloaded / 1024 / 1024:.1f} MB)")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Failed to download model: {str(e)}")
+        return False
+
+
 try:
     """
     Load the pre-trained dog breed classification model.
     The model is a CNN trained on the Mini Dog Breed dataset.
     """
+    # Download from Google Drive if needed
+    download_model_from_google_drive()
+    
     model = tf.keras.models.load_model(MODEL_PATH)
     logger.info(f"Model loaded successfully from {MODEL_PATH}")
 except Exception as e:

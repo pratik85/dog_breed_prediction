@@ -1,5 +1,18 @@
+# Python
 __pycache__/
+*.py[cod]
+*$py.class
 venv/
-.env
+ENV/
+
+# Flask
+instance/
 uploads/
-*.pyc
+
+# Env files
+.env
+.env.local
+
+# Model (large files - download from Google Drive at runtime)
+model/*.h5
+model/dog_breed_model.h5
