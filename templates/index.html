@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dog Breed Prediction</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+
+<div class="container">
+    <h2>Dog Breed Prediction</h2>
+
+    <form method="POST" action="/" enctype="multipart/form-data">
+        <input type="file" name="file" accept="image/*" required>
+        <button type="submit">Predict Breed</button>
+    </form>
+
+    {% if result or predicted_breed %}
+        {% if score is defined %}
+            {% set confidence = score %}
+        {% else %}
+            {% set confidence = confidence %}
+        {% endif %}
+        {% if result is defined %}
+            {% set breed = result %}
+        {% else %}
+            {% set breed = predicted_breed %}
+        {% endif %}
+
+        <div class="result-container">
+            <div class="image-section">
+                {% if image_path %}
+                    <img src="/uploads/{{ image_path }}" alt="Uploaded image" class="uploaded-image">
+                {% endif %}
+            </div>
+
+            <div class="score-card">
+                <h3 class="result-text">Predicted Breed: {{ breed }}</h3>
+                <div class="score-section">
+                    <p class="score-label">Confidence</p>
+                    <p class="score-value">{{ (confidence * 100) | round(2) }}%</p>
+                    <div class="score-bar">
+                        <div class="score-fill" style="width: {{ confidence * 100 }}%"></div>
+                    </div>
+                </div>
+                <p class="score-info">
+                    {% if confidence >= 0.6 %}
+                        High confidence — likely correct prediction.
+                    {% else %}
+                        Low confidence — consider trying another image.
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+</body>
+</html>

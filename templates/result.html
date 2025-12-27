@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Prediction Result</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<div class="container">
+    <h2>Prediction Result</h2>
+
+    <div class="result-container">
+        <div class="image-section">
+            {% if image_path %}
+                <img src="/uploads/{{ image_path }}" alt="Uploaded image" class="uploaded-image">
+            {% endif %}
+        </div>
+
+        <div class="score-card">
+            <h3 class="result-text">Predicted Breed: {{ breed }}</h3>
+            <div class="score-section">
+                <p class="score-label">Confidence</p>
+                <p class="score-value">{{ (confidence * 100) | round(2) }}%</p>
+                <div class="score-bar">
+                    <div class="score-fill" style="width: {{ confidence * 100 }}%"></div>
+                </div>
+            </div>
+
+            <h4 style="margin-top:18px;">All Predictions</h4>
+            <ul>
+                {% for name, prob in all_predictions.items() %}
+                    <li>{{ name }}: {{ (prob * 100) | round(2) }}%</li>
+                {% endfor %}
+            </ul>
+
+            <p style="margin-top:12px; text-align:center;"><a href="/">Classify another image</a></p>
+        </div>
+    </div>
+</div>
+</body>
+</html>
